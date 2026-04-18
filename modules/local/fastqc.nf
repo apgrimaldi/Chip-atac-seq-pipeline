@@ -1,11 +1,13 @@
 process FASTQC {
     tag "${meta.id}"
     label 'process_low'
-    
-    // Usiamo quay.io che è lo standard di nf-core, più stabile di DockerHub
+
     container 'quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0'
     
-    publishDir "${params.outdir}/fastqc", mode: 'copy'
+    // Nota: Il publishDir lo abbiamo già definito nel nextflow.config, 
+    // quindi qui potresti anche toglierlo per non creare conflitti, 
+    // ma lasciarlo non rompe nulla.
+    publishDir "${params.outdir}/01_fastqc", mode: 'copy'
 
     input:
     tuple val(meta), path(reads)
@@ -16,8 +18,9 @@ process FASTQC {
     path  "versions.yml"           , emit: versions
 
     script:
+    // Usiamo -t per sfruttare i core assegnati nel config
     """
-    fastqc $reads
+    fastqc -t $task.cpus -q $reads
     
     cat <<EOF > versions.yml
     "${task.process}":
